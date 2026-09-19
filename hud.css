@@ -1,0 +1,804 @@
+/* PokeWatch HUD Overlay — Obsidian & Gold Luxury Game HUD */
+/* Injetado nativamente em: https://poke.idleworld.online/* */
+
+#pokewatch-hud {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9999999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 11px;
+  color: #e2e8f0;
+  user-select: none;
+  touch-action: none;
+}
+
+#pokewatch-hud * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.pw-card {
+  width: 310px;
+  background: linear-gradient(180deg, #0f161f 0%, #090e15 40%, #05080c 100%);
+  border: 1px solid rgba(223, 186, 115, 0.4);
+  border-radius: 8px;
+  box-shadow: 
+    0 20px 45px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 235, 180, 0.28),
+    inset 0 0 16px rgba(151, 115, 42, 0.1);
+  overflow: hidden;
+  transition: width 0.26s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.26s ease, box-shadow 0.2s ease;
+}
+
+/* CABEÇALHO COM ARRASTE */
+.pw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px 7px 12px;
+  background: linear-gradient(180deg, #1b2633 0%, #111a24 100%);
+  border-bottom: 1px solid rgba(223, 186, 115, 0.35);
+  cursor: grab;
+  position: relative;
+}
+.pw-header:active {
+  cursor: grabbing;
+}
+.pw-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 235, 180, 0.4), transparent);
+}
+
+.pw-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f3e5be;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+/* JÓIA PULSANTE DE STATUS */
+.pw-pulse-dot {
+  width: 7px;
+  height: 7px;
+  background: #dfba73;
+  border: 1px solid #ffffff;
+  border-radius: 1px;
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px rgba(223, 186, 115, 0.85);
+  animation: pw-jewel-pulse 2.4s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+@keyframes pw-jewel-pulse {
+  0%, 100% { opacity: 0.8; transform: rotate(45deg) scale(0.95); box-shadow: 0 0 6px rgba(223, 186, 115, 0.6); }
+  50% { opacity: 1; transform: rotate(45deg) scale(1.15); box-shadow: 0 0 12px rgba(223, 186, 115, 1); }
+}
+
+.pw-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pw-btn-icon {
+  background: linear-gradient(180deg, #18232e, #0c141c);
+  border: 1px solid rgba(223, 186, 115, 0.35);
+  color: #dfba73;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0;
+  transition: all 0.12s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.pw-btn-icon:hover {
+  background: linear-gradient(180deg, #243547, #131f2c);
+  border-color: #dfba73;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(223, 186, 115, 0.35);
+  transform: translateY(-0.5px);
+}
+.pw-btn-icon:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.7);
+}
+
+/* CORPO EXPANDIDO */
+.pw-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* MODO COCKPIT PILL (RECOLHIDO) */
+.pw-card.pw-collapsed {
+  width: 245px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #131c26 0%, #080d13 100%);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 235, 180, 0.28);
+}
+
+.pw-card.pw-collapsed .pw-header {
+  border-radius: 20px;
+  border-bottom: none;
+  padding: 6px 8px 6px 12px;
+}
+
+.pw-card.pw-collapsed .pw-body {
+  display: none;
+}
+
+.pw-pill-status {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  font-size: 10.5px;
+}
+
+.pw-card.pw-collapsed .pw-title-text {
+  display: none;
+}
+
+.pw-card.pw-collapsed .pw-pill-status {
+  display: flex;
+}
+
+/* CÉLULAS E STATUS */
+.pw-section-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #dfba73;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.pw-section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(223, 186, 115, 0.3), transparent);
+}
+
+.pw-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  background: linear-gradient(180deg, rgba(16, 25, 36, 0.6) 0%, rgba(8, 13, 20, 0.8) 100%);
+  border: 1px solid rgba(223, 186, 115, 0.18);
+  border-radius: 5px;
+}
+
+.pw-status-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 10.5px;
+  color: #cbd5e1;
+}
+
+.pw-badge {
+  font-size: 9.5px;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pw-badge.ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.pw-badge.warn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.pw-badge.error {
+  background: rgba(244, 63, 94, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.pw-sub-hint {
+  font-size: 9.5px;
+  color: #fca5a5;
+  padding-left: 4px;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+}
+
+/* SESSÃO ATUAL */
+.pw-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.pw-stat-box {
+  background: linear-gradient(180deg, rgba(16, 25, 36, 0.6) 0%, rgba(8, 13, 20, 0.8) 100%);
+  border: 1px solid rgba(223, 186, 115, 0.2);
+  border-radius: 5px;
+  padding: 6px 9px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.pw-stat-box .pw-stat-lbl {
+  font-size: 9.5px;
+  color: #94a3b8;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+}
+
+.pw-stat-box .pw-stat-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  font-feature-settings: "tnum" 1;
+  margin-top: 1px;
+}
+
+.pw-stat-box .pw-stat-num.shiny {
+  color: #fbbf24;
+}
+
+/* ÚLTIMA CAPTURA */
+.pw-last-catch {
+  background: linear-gradient(180deg, rgba(16, 25, 36, 0.6) 0%, rgba(8, 13, 20, 0.8) 100%);
+  border: 1px solid rgba(223, 186, 115, 0.2);
+  border-radius: 5px;
+  padding: 6px 9px;
+}
+
+.pw-last-catch-detail {
+  font-size: 11px;
+  color: #a7f3d0;
+  margin-top: 2px;
+  display: flex;
+  justify-content: space-between;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+}
+
+/* GRADE DE POKÉBOLAS */
+.pw-bolas-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.pw-bola-item {
+  background: linear-gradient(180deg, rgba(14, 20, 28, 0.7) 0%, rgba(6, 10, 15, 0.85) 100%);
+  border: 1px solid rgba(223, 186, 115, 0.2);
+  border-radius: 5px;
+  padding: 5px 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+}
+
+.pw-bola-item b {
+  font-size: 11px;
+  color: #ffffff;
+}
+
+.pw-bola-item.critica {
+  border-color: rgba(244, 63, 94, 0.5);
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.25);
+}
+.pw-bola-item.critica b {
+  color: #f87171;
+}
+
+/* TELEMETRIA PREDITIVA DE ESGOTAMENTO */
+.pw-drain-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9.5px;
+  color: #cbd5e1;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  padding: 3px 2px 0;
+}
+.pw-drain-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+  border: 1px solid rgba(223, 186, 115, 0.2);
+}
+.pw-drain-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #97732a, #dfba73);
+  width: 100%;
+  transition: width 0.4s ease;
+}
+
+/* BARRA VISUAL DE IV (ESTILO IV TOOL) */
+.pw-iv-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 5px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.pw-iv-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #38bdf8 0%, #10b981 100%);
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+
+.pw-iv-fill.iv-top {
+  background: linear-gradient(90deg, #10b981 0%, #fef08a 60%, #dfba73 100%);
+  box-shadow: 0 0 8px rgba(223, 186, 115, 0.8);
+}
+
+.pw-iv-fill.iv-perfect {
+  background: linear-gradient(90deg, #c084fc 0%, #f472b6 50%, #fef08a 100%);
+  box-shadow: 0 0 10px rgba(192, 132, 252, 0.9);
+}
+
+/* BADGE DE LEMBRETE DE GIFT DIÁRIO */
+.pw-gift-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.2), rgba(161, 98, 7, 0.3));
+  border: 1px solid #eab308;
+  border-radius: 4px;
+  color: #fef08a;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  animation: pw-gift-glow 1.8s infinite ease-in-out;
+  cursor: pointer;
+}
+
+@keyframes pw-gift-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(234, 179, 8, 0.4); transform: scale(1); }
+  50% { box-shadow: 0 0 12px rgba(250, 204, 21, 0.9); transform: scale(1.03); }
+}
+
+/* BLOQUEIO DE ANÚNCIOS DE SHINY GLOBAIS & PROMOÇÕES DA LOJA */
+body.pw-block-shiny-news .shiny-news,
+body.pw-block-shiny-news .global-shiny,
+body.pw-block-shiny-news [class*="global-broadcast"],
+body.pw-block-shiny-news [class*="shiny-alert"],
+body.pw-block-shiny-news .chat-msg-shiny,
+body.pw-block-shiny-news [data-channel="global-shiny"],
+body.pw-block-shiny-news .chat-global-shiny {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.pw-block-diamond-promos .diamond-promo,
+body.pw-block-diamond-promos .promo-banner,
+body.pw-block-diamond-promos .shop-promo,
+body.pw-block-diamond-promos [class*="promo-diamond"],
+body.pw-block-diamond-promos [class*="shop-banner-promo"],
+body.pw-block-diamond-promos [class*="sale-banner"],
+body.pw-block-diamond-promos .dia-promo-modal {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ============================================================
+   POKEWATCH TOOL — JANELA IN-GAME FLUTUANTE (ESTILO IV TOOL)
+   ============================================================ */
+
+.pw-tool-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 2147483647 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  user-select: none;
+}
+
+.pw-tool-window {
+  width: 380px;
+  max-width: 95vw;
+  max-height: 90vh;
+  background: linear-gradient(180deg, #1c2633 0%, #111a24 40%, #0a1118 100%);
+  border: 1px solid rgba(223, 186, 115, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 235, 180, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: pwModalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pwModalPop {
+  0% { opacity: 0; transform: scale(0.93) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* CABEÇALHO DO MODAL IN-GAME */
+.pw-tool-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #243447 0%, #172433 100%);
+  border-bottom: 1px solid rgba(223, 186, 115, 0.3);
+  position: relative;
+}
+
+.pw-tool-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pw-tool-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pw-tool-title span {
+  color: #dfba73;
+}
+
+.pw-tool-badge-ver {
+  font-size: 9.5px;
+  background: rgba(223, 186, 115, 0.15);
+  border: 1px solid rgba(223, 186, 115, 0.35);
+  color: #fef08a;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.pw-tool-status-dot {
+  font-size: 10px;
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: monospace;
+}
+.pw-tool-status-dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.pw-tool-btn-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+}
+.pw-tool-btn-close:hover {
+  background: rgba(244, 63, 94, 0.2);
+  color: #fca5a5;
+}
+
+/* NAVEGAÇÃO ENTRE ABAS DO MODAL */
+.pw-tool-tabs-nav {
+  display: flex;
+  background: #0d1520;
+  padding: 6px 12px;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pw-tool-tab-btn {
+  flex: 1;
+  background: #121c29;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 7px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.pw-tool-tab-btn:hover {
+  background: #192738;
+  color: #fff;
+  border-color: rgba(223, 186, 115, 0.3);
+}
+.pw-tool-tab-btn.active {
+  background: linear-gradient(180deg, #fef08a 0%, #dfba73 100%);
+  color: #0c141d;
+  font-weight: 800;
+  border-color: #fef08a;
+  box-shadow: 0 0 10px rgba(223, 186, 115, 0.4);
+}
+
+/* CORPO DO MODAL */
+.pw-tool-body {
+  padding: 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #e2e8f0;
+}
+
+/* CARDS DE AÇÃO RÁPIDA (FOTO 1) */
+.pw-tool-section-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #dfba73;
+  font-family: "SF Mono", "Cascadia Code", monospace;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: -4px;
+}
+
+.pw-tool-action-card {
+  background: linear-gradient(180deg, rgba(26, 38, 52, 0.8) 0%, rgba(15, 23, 33, 0.95) 100%);
+  border: 1px solid rgba(223, 186, 115, 0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pw-tool-action-card:hover {
+  border-color: #dfba73;
+  background: linear-gradient(180deg, rgba(35, 52, 72, 0.9) 0%, rgba(19, 31, 45, 1) 100%);
+  transform: translateY(-1px);
+}
+.pw-tool-action-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pw-tool-action-ico {
+  font-size: 20px;
+  color: #38bdf8;
+}
+.pw-tool-action-info strong {
+  display: block;
+  font-size: 12.5px;
+  color: #fff;
+}
+.pw-tool-action-info p {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+.pw-tool-shortcut-badge {
+  background: #0c141e;
+  border: 1px solid rgba(223, 186, 115, 0.4);
+  color: #38bdf8;
+  font-size: 9.5px;
+  font-family: monospace;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 5px;
+}
+
+/* SWITCHES IN-GAME */
+.pw-tool-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0d1520;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  padding: 9px 12px;
+}
+.pw-tool-switch-info strong {
+  display: block;
+  font-size: 11.5px;
+  color: #f1f5f9;
+}
+.pw-tool-switch-info p {
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+/* ============================================================
+   CARD DO POKÉMON (FOTOS 2, 3 E 4 DO IV TOOL)
+   ============================================================ */
+.pw-pkmn-hero-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(180deg, rgba(20, 30, 42, 0.85) 0%, rgba(10, 16, 24, 0.95) 100%);
+  border: 1px solid rgba(223, 186, 115, 0.3);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.pw-pkmn-avatar-box {
+  width: 74px;
+  height: 74px;
+  background: #090e15;
+  border: 2px solid #dfba73;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(223, 186, 115, 0.35);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.pw-pkmn-avatar-box img {
+  width: 58px;
+  height: 58px;
+  image-rendering: pixelated;
+}
+.pw-pkmn-avatar-ico {
+  font-size: 34px;
+}
+
+.pw-pkmn-meta-info {
+  flex: 1;
+}
+.pw-pkmn-meta-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fef08a;
+  font-family: "SF Mono", "Cascadia Code", monospace;
+}
+.pw-pkmn-meta-stats {
+  font-size: 11px;
+  color: #cbd5e1;
+  margin: 3px 0;
+  font-family: monospace;
+}
+.pw-pkmn-meta-stats b {
+  color: #fde047;
+}
+
+.pw-pkmn-badges-row {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+.pw-pkmn-badge {
+  font-size: 9px;
+  font-weight: 700;
+  font-family: monospace;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.pw-pkmn-badge.rarity-generica {
+  background: rgba(223, 186, 115, 0.22);
+  border: 1px solid rgba(223, 186, 115, 0.55);
+  color: #fef08a;
+}
+.pw-pkmn-badge.shiny {
+  background: rgba(56, 189, 248, 0.25);
+  border: 1px solid #38bdf8;
+  color: #e0f2fe;
+}
+
+/* Observação honesta sobre o que o jogo entrega (aba "Última captura") */
+.pw-tool-nota {
+  font-size: 10px;
+  line-height: 1.5;
+  color: #64748b;
+  font-family: monospace;
+  border-left: 2px solid rgba(223, 186, 115, 0.35);
+  padding-left: 8px;
+}
+
+.pw-iv-total-card {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #0c141e;
+  border: 1px solid rgba(223, 186, 115, 0.3);
+  border-radius: 8px;
+}
+.pw-iv-total-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.pw-iv-total-header b {
+  color: #fef08a;
+}
+.pw-iv-total-track {
+  height: 10px;
+  background: #06090e;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.pw-iv-total-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+  transition: width 0.35s ease;
+}
+

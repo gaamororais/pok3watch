@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="popup.titulo">Pok3Watch — Cockpit de Controle</title>
+  <style>
+    :root {
+      --bg-chassis: #06090d;
+      --panel-surface: #0a0f16;
+      --panel-surface-elevated: #0f1620;
+      --panel-surface-subtle: #080d13;
+      --gold-primary: #dfba73;
+      --gold-bright: #fef08a;
+      --gold-dark: #97732a;
+      --gold-border: rgba(223, 186, 115, 0.35);
+      --gold-border-subtle: rgba(223, 186, 115, 0.16);
+      --gold-glow: rgba(223, 186, 115, 0.15);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --text-high: #f8fafc;
+      --text-mid: #94a3b8;
+      --text-dim: #475569;
+      --font-mono: "SF Mono", "Cascadia Code", "Roboto Mono", ui-monospace, monospace;
+      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(223, 186, 115, 0.3) transparent;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #06090d;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(223, 186, 115, 0.25);
+      border-radius: 4px;
+      border: 1px solid rgba(223, 186, 115, 0.15);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(223, 186, 115, 0.55);
+      box-shadow: 0 0 8px rgba(223, 186, 115, 0.4);
+    }
+    ::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+
+    body {
+      width: 350px;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-ui);
+      background: var(--bg-chassis);
+      color: var(--text-high);
+      line-height: 1.4;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* SVG SPRITES OCULTOS P/ REUSO */
+    .svg-defs { display: none; }
+
+    /* CABEÇALHO DE LUXO OBSIDIAN & GOLD */
+    .header {
+      background: linear-gradient(180deg, #182432 0%, #0d151f 100%);
+      padding: 13px 16px 11px;
+      border-bottom: 1px solid var(--gold-border);
+      position: relative;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 235, 180, 0.22);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 15%;
+      right: 15%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(223, 186, 115, 0.6), transparent);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .header-insignia {
+      width: 22px;
+      height: 22px;
+      filter: drop-shadow(0 0 6px rgba(223, 186, 115, 0.4));
+    }
+    .header-titles h3 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      background: linear-gradient(180deg, #ffffff 0%, #dfba73 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+    }
+    .header-titles p {
+      font-size: 9.5px;
+      color: #94a3b8;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      margin-top: 1px;
+    }
+
+    .header-version {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #dfba73;
+      background: rgba(223, 186, 115, 0.12);
+      border: 1px solid rgba(223, 186, 115, 0.35);
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    /* BARRA MULTI-CONTAS */
+    .account-tabs-wrapper {
+      padding: 8px 14px;
+      background: #090e15;
+      border-bottom: 1px solid rgba(223, 186, 115, 0.2);
+    }
+    .account-tabs-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      margin-bottom: 5px;
+    }
+    .account-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .account-tabs::-webkit-scrollbar { display: none; }
+    .account-tab-btn {
+      background: #0f1620;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-mid);
+      padding: 4px 9px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .account-tab-btn:hover {
+      border-color: rgba(223, 186, 115, 0.4);
+      color: #fff;
+    }
+    .account-tab-btn.active {
+      background: rgba(223, 186, 115, 0.15);
+      border-color: var(--gold-primary);
+      color: var(--gold-bright);
+      font-weight: 700;
+      box-shadow: 0 0 8px rgba(223, 186, 115, 0.2);
+    }
+
+    /* CONTEÚDO */
+    .content {
+      padding: 14px 15px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* CARD DE STATUS DO JOGO COM HEARTBEAT */
+    .status-card {
+      background: linear-gradient(180deg, #101822 0%, #080d14 100%);
+      border: 1px solid var(--gold-border-subtle);
+      border-radius: 7px;
+      padding: 9px 12px;
+      font-size: 11.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 3px 10px rgba(0,0,0,0.5);
+    }
+    .status-card-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Heartbeat Pulse Pip */
+    .heartbeat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      position: relative;
+    }
+    .status-on .heartbeat-dot {
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: heartPulse 1.8s infinite ease-in-out;
+    }
+    .status-off .heartbeat-dot {
+      background: var(--rose);
+      box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
+    }
+    @keyframes heartPulse {
+      0%, 100% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px var(--emerald); }
+    }
+
+    .status-on {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #a7f3d0;
+    }
+    .status-off {
+      border-color: rgba(244, 63, 94, 0.35);
+      color: #fca5a5;
+    }
+    .status-card-hint {
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      color: #64748b;
+    }
+
+    /* SEPARADORES DE SEÇÃO */
+    .section-title {
+      color: #dfba73;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+      margin-bottom: -2px;
+    }
+    .section-title::before {
+      content: "";
+      width: 4px;
+      height: 4px;
+      background: #dfba73;
+      transform: rotate(45deg);
+      border-radius: 0.5px;
+    }
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(223, 186, 115, 0.3), transparent);
+    }
+
+    /* CAMPOS DE FORMULÁRIO TÁTEIS */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-group label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      background: #080d14;
+      border: 1px solid rgba(223, 186, 115, 0.25);
+      border-radius: 5px;
+      color: #fff;
+      font-size: 12px;
+      font-family: var(--font-ui);
+      padding: 7px 10px;
+      outline: none;
+      transition: all 0.15s ease;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+    }
+    input[type="text"]:focus, select:focus {
+      border-color: #dfba73;
+      box-shadow: 0 0 8px rgba(223, 186, 115, 0.25), inset 0 1px 2px rgba(0,0,0,0.5);
+      background: #0d1520;
+    }
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23dfba73' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 26px;
+    }
+    select option {
+      background: #0a0f16;
+      color: #fff;
+    }
+
+    /* INPUTS NUMÉRICOS REFINADOS COM STEPPERS (+ / -) */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stepper-wrap {
+      display: flex;
+      align-items: center;
+      background: #080d14;
+      border: 1px solid rgba(223, 186, 115, 0.25);
+      border-radius: 5px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+      transition: border-color 0.15s;
+    }
+    .stepper-wrap:focus-within {
+      border-color: #dfba73;
+      box-shadow: 0 0 8px rgba(223, 186, 115, 0.25);
+    }
+    .stepper-btn {
+      background: linear-gradient(180deg, #16202c, #0d141d);
+      border: none;
+      color: #dfba73;
+      font-size: 14px;
+      font-weight: 700;
+      width: 28px;
+      height: 31px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, color 0.12s;
+    }
+    .stepper-btn:hover {
+      background: #1f2d3d;
+      color: #fff;
+    }
+    .stepper-btn:active {
+      background: #090e15;
+    }
+    .stepper-input {
+      flex: 1;
+      width: 100%;
+      border: none !important;
+      background: transparent !important;
+      color: #fff !important;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 12px;
+      padding: 6px 2px !important;
+      outline: none;
+      -moz-appearance: textfield;
+      box-shadow: none !important;
+    }
+    .stepper-input::-webkit-outer-spin-button,
+    .stepper-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .stepper-unit {
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      color: #64748b;
+      padding-right: 7px;
+    }
+
+    /* SWITCH FÍSICO MODERNO (ZERO CHECKBOX PADRÃO) */
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(16, 24, 34, 0.5) 0%, rgba(8, 13, 20, 0.7) 100%);
+      border: 1px solid rgba(223, 186, 115, 0.15);
+      border-radius: 6px;
+      padding: 7px 10px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .switch-row:hover {
+      border-color: rgba(223, 186, 115, 0.3);
+      background: linear-gradient(180deg, rgba(20, 30, 42, 0.6), rgba(10, 16, 24, 0.8));
+    }
+    .switch-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .switch-title {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #f1f5f9;
+      cursor: pointer;
+    }
+    .switch-subtitle {
+      font-size: 9.5px;
+      color: #64748b;
+      font-family: var(--font-mono);
+    }
+
+    /* O Toggle em si */
+    .pw-switch {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 20px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .pw-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .pw-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #090e15;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .pw-slider::before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background: linear-gradient(180deg, #cbd5e1 0%, #64748b 100%);
+      border-radius: 50%;
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+    .pw-switch input:checked + .pw-slider {
+      background: linear-gradient(180deg, #183327 0%, #0b1f17 100%);
+      border-color: #10b981;
+      box-shadow: inset 0 0 6px rgba(16, 185, 129, 0.4), 0 0 8px rgba(16, 185, 129, 0.2);
+    }
+    .pw-switch input:checked + .pw-slider::before {
+      transform: translateX(18px);
+      background: linear-gradient(180deg, #fef08a 0%, #dfba73 100%);
+      box-shadow: 0 0 8px rgba(223, 186, 115, 0.8), 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* PAINEL RETRÁTIL DE FILTROS DE PRINTS */
+    .accordion-card {
+      background: #080d14;
+      border: 1px solid rgba(223, 186, 115, 0.2);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .accordion-header {
+      padding: 8px 10px;
+      background: linear-gradient(180deg, #121a24, #0b1118);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .accordion-header:hover {
+      background: linear-gradient(180deg, #172230, #0f1620);
+    }
+    .accordion-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #dfba73;
+    }
+    .accordion-badge {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      background: rgba(223, 186, 115, 0.14);
+      color: #fef08a;
+      padding: 1px 6px;
+      border-radius: 3px;
+      border: 1px solid rgba(223, 186, 115, 0.3);
+    }
+    .accordion-chevron {
+      font-size: 11px;
+      color: #dfba73;
+      transition: transform 0.22s ease;
+    }
+    .accordion-chevron.expanded {
+      transform: rotate(180deg);
+    }
+    .accordion-body {
+      padding: 8px 10px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      border-top: 1px solid rgba(223, 186, 115, 0.12);
+      background: #060a0f;
+    }
+    .accordion-body.open {
+      display: flex;
+    }
+
+    /* ROTAS DE FARM (ESTILO IV TOOL) */
+    .route-levels-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .route-lvl-btn {
+      background: #0d1520;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 600;
+      padding: 4px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .route-lvl-btn:hover {
+      border-color: rgba(223, 186, 115, 0.4);
+      color: #fff;
+    }
+    .route-lvl-btn.active {
+      background: #fef08a;
+      border-color: #fde047;
+      color: #0c141d;
+      font-weight: 700;
+      box-shadow: 0 0 8px rgba(254, 240, 138, 0.4);
+    }
+    .route-spawns-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 190px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    .route-spawn-item {
+      background: #0e1620;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .route-spawn-item.featured {
+      background: linear-gradient(90deg, rgba(234, 88, 12, 0.15), rgba(245, 158, 11, 0.1));
+      border: 1px solid rgba(249, 115, 22, 0.5);
+      color: #fed7aa;
+      font-weight: 700;
+      box-shadow: inset 0 0 8px rgba(249, 115, 22, 0.1);
+    }
+    .route-spawn-badge {
+      font-size: 9.5px;
+      color: #fde047;
+      font-weight: 700;
+    }
+
+    /* MÉTRICAS DE TELEMETRIA OBSIDIAN & GOLD */
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+    .metric {
+      background: linear-gradient(180deg, #0f1722 0%, #080d14 100%);
+      border: 1px solid rgba(223, 186, 115, 0.22);
+      border-radius: 6px;
+      padding: 7px 9px;
+      min-height: 46px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    .metric span {
+      display: block;
+      color: #94a3b8;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-family: var(--font-mono);
+    }
+    .metric strong {
+      display: block;
+      color: #ffffff;
+      font-size: 15px;
+      font-family: var(--font-mono);
+      font-feature-settings: "tnum" 1;
+      margin-top: 1px;
+    }
+    .metric-wide {
+      grid-column: 1 / -1;
+    }
+    .metric-wide strong {
+      font-size: 12.5px;
+      color: #dfba73;
+    }
+
+    .details {
+      font-size: 10px;
+      line-height: 1.4;
+      color: #8fa0b5;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed rgba(223, 186, 115, 0.18);
+      padding: 7px 9px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+    }
+
+    /* FEEDBACK CARD DO WHATSAPP */
+    .whatsapp-card {
+      background: linear-gradient(180deg, #0e1620 0%, #080e15 100%);
+      border: 1px solid rgba(223, 186, 115, 0.2);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .whatsapp-icon-pip {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      flex-shrink: 0;
+    }
+    .mini-status {
+      font-size: 10.5px;
+      color: #94a3b8;
+      font-family: var(--font-mono);
+      flex: 1;
+    }
+    .status-on-text {
+      color: #34d399 !important;
+    }
+    .status-off-text {
+      color: #f87171 !important;
+    }
+
+    /* BOTÕES DE AÇÃO METÁLICOS */
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 4px;
+    }
+    .btn {
+      padding: 9px 12px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.14s ease;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+    }
+    .btn:active {
+      transform: translateY(1px);
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: wait;
+      transform: none;
+    }
+
+    /* Botão Ouro Principal */
+    .btn-save {
+      background: linear-gradient(180deg, #fef08a 0%, #dfba73 50%, #97732a 100%);
+      color: #06090d;
+      border: 1px solid #fef08a;
+      box-shadow: 0 4px 14px rgba(223, 186, 115, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+    .btn-save:hover {
+      background: linear-gradient(180deg, #ffffff 0%, #fef08a 50%, #c49942 100%);
+      box-shadow: 0 6px 20px rgba(223, 186, 115, 0.5);
+    }
+
+    /* Botão Escuro Secundário */
+    .btn-test {
+      background: linear-gradient(180deg, #18232e, #0c141c);
+      border: 1px solid var(--gold-border);
+      color: #dfba73;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .btn-test:hover {
+      background: linear-gradient(180deg, #223243, #111b25);
+      border-color: #dfba73;
+      color: #fff;
+    }
+
+    /* Botão Reset Ghost */
+    .btn-reset {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #64748b;
+      font-size: 10px;
+      padding: 6px;
+    }
+    .btn-reset:hover {
+      color: #cbd5e1;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* TOAST DE FEEDBACK TIPO HUD */
+    #toast {
+      display: none;
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.85);
+      max-width: 310px;
+      text-align: center;
+      z-index: 1000;
+      letter-spacing: 0.02em;
+    }
+    .toast-success {
+      background: linear-gradient(180deg, #152d21, #0a1b13);
+      border: 1px solid #10b981;
+      color: #a7f3d0;
+    }
+    .toast-error {
+      background: linear-gradient(180deg, #2d1518, #1b0a0c);
+      border: 1px solid #f43f5e;
+      color: #fecdd3;
+    }
+
+    /* NOVO CARD: HUNT & SESSÃO REAL */
+    .hunt-dashboard {
+      background: linear-gradient(180deg, #0d1520 0%, #070c12 100%);
+      border: 1px solid rgba(223, 186, 115, 0.28);
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 3px 10px rgba(0,0,0,0.5);
+    }
+    .hunt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 6px;
+    }
+    .hunt-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gold-primary);
+      font-family: var(--font-mono);
+    }
+    .hunt-time {
+      font-size: 9.5px;
+      color: #94a3b8;
+      font-family: var(--font-mono);
+    }
+
+    .hunt-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+    .hunt-stat {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      padding: 5px 7px;
+    }
+    .hunt-stat-lbl {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      display: flex;
+      justify-content: space-between;
+    }
+    .hunt-stat-val {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: #fff;
+      margin-top: 1px;
+    }
+    .val-green { color: var(--emerald); }
+    .val-gold { color: var(--gold-bright); }
+    .val-rose { color: var(--rose); }
+
+    .hunt-footer-rate {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 4px;
+      padding: 4px 7px;
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      color: #6ee7b7;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* REGRAS COMPACTAS COCKPIT */
+    .regras-ajuda, .dica { font-size: 10px; color: #8fa0b5; line-height: 1.4; }
+    .regra-erro { font-size: 10px; color: #fca5a5; line-height: 1.4; }
+    .regras-ajuda b { color: #dfba73; }
+
+    .compact-rule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .rule-item {
+      background: #090e15;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 5px;
+      overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+    .rule-item:hover {
+      border-color: rgba(223, 186, 115, 0.3);
+    }
+    .rule-item.editing {
+      border-color: var(--gold-primary);
+      background: #0b131d;
+    }
+    .rule-item.desativada {
+      opacity: 0.55;
+    }
+    .rule-item.invalida {
+      border-color: var(--rose);
+    }
+
+    .rule-summary-row {
+      padding: 7px 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .rule-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mini-switch {
+      position: relative;
+      display: inline-block;
+      width: 28px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .mini-switch input { opacity: 0; width: 0; height: 0; }
+    .mini-slider {
+      position: absolute;
+      inset: 0;
+      background: #1e293b;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .mini-slider::before {
+      position: absolute;
+      content: "";
+      height: 10px;
+      width: 10px;
+      left: 3px;
+      bottom: 3px;
+      background: #94a3b8;
+      border-radius: 50%;
+      transition: .2s;
+    }
+    .mini-switch input:checked + .mini-slider {
+      background: #065f46;
+    }
+    .mini-switch input:checked + .mini-slider::before {
+      transform: translateX(12px);
+      background: #dfba73;
+    }
+
+    .rule-text {
+      font-size: 11px;
+      font-weight: 600;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rule-badge-priority {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .pri-max {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      color: #fca5a5;
+    }
+    .pri-high {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fde68a;
+    }
+
+    .btn-edit-rule {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-dim);
+      border-radius: 3px;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 10px;
+      transition: all 0.15s ease;
+    }
+    .btn-edit-rule:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .rule-item.editing .btn-edit-rule {
+      color: var(--gold-bright);
+      border-color: var(--gold-primary);
+    }
+
+    /* GAVETA DE EDIÇÃO DA REGRA */
+    .rule-edit-drawer {
+      padding: 9px 10px 10px;
+      background: #060a0f;
+      border-top: 1px solid rgba(223, 186, 115, 0.2);
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rule-item.editing .rule-edit-drawer {
+      display: flex;
+    }
+
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .rarity-btn {
+      background: #0a111a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-mid);
+      padding: 4px 2px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-family: var(--font-mono);
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .rarity-btn.active {
+      font-weight: 700;
+      color: #fff;
+    }
+    .rarity-btn.cosmica.active { background: rgba(168, 85, 247, 0.25); border-color: #c084fc; color: #f3e8ff; }
+    .rarity-btn.mitica.active { background: rgba(217, 70, 239, 0.25); border-color: #d946ef; color: #f5d0fe; }
+    .rarity-btn.ancia.active { background: rgba(239, 68, 68, 0.25); border-color: #ef4444; color: #fecaca; }
+    .rarity-btn.divina.active { background: rgba(234, 179, 8, 0.25); border-color: #eab308; color: #fef08a; }
+    .rarity-btn.lendaria.active { background: rgba(245, 158, 11, 0.25); border-color: #f59e0b; color: #fde68a; }
+    .rarity-btn.epica.active { background: rgba(168, 85, 247, 0.25); border-color: #a855f7; color: #e9d5ff; }
+    .rarity-btn.rara.active { background: rgba(59, 130, 246, 0.25); border-color: #3b82f6; color: #bfdbfe; }
+    .rarity-btn.incomum.active { background: rgba(16, 185, 129, 0.25); border-color: #10b981; color: #a7f3d0; }
+    .rarity-btn.comum.active { background: rgba(148, 163, 184, 0.25); border-color: #94a3b8; color: #f1f5f9; }
+
+    .edit-controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+    .mini-stepper {
+      display: flex;
+      align-items: center;
+      background: #090e15;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      height: 24px;
+    }
+    .mini-stepper button {
+      background: transparent;
+      border: none;
+      color: var(--text-mid);
+      width: 22px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .mini-stepper button:hover { color: #fff; }
+    .mini-stepper input {
+      width: 34px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      text-align: center;
+      outline: none;
+      padding: 0;
+    }
+    .mini-stepper span {
+      font-size: 8.5px;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+      padding-right: 4px;
+    }
+    .drawer-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-del-drawer {
+      background: transparent;
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      color: #fca5a5;
+      border-radius: 4px;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-del-drawer:hover, .btn-del-drawer.armado {
+      background: rgba(244, 63, 94, 0.25);
+      color: #fff;
+    }
+    .rule-name-input {
+      background: #080d14;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 7px;
+      width: 100%;
+      outline: none;
+    }
+    .rule-name-input:focus {
+      border-color: var(--gold-primary);
+    }
+    .rule-hint-text {
+      font-size: 9.5px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+    .rule-error-text {
+      font-size: 9.5px;
+      color: var(--rose);
+      font-family: var(--font-mono);
+      line-height: 1.3;
+    }
+
+    .regras-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .btn-mini { padding: 6px 8px; font-size: 10px; }
+    .teste-rapido {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed rgba(223, 186, 115, 0.25);
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .teste-titulo { font-size: 10px; color: #dfba73; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+    .teste-linha { display: grid; grid-template-columns: 1fr 64px 44px; gap: 6px; align-items: center; }
+    .teste-iv {
+      width: 100%;
+      background: #080d14;
+      border: 1px solid rgba(223, 186, 115, 0.25);
+      border-radius: 5px;
+      color: #fff;
+      padding: 6px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .teste-shiny { font-size: 12px; display: flex; align-items: center; gap: 3px; cursor: pointer; }
+    .teste-resultado { font-size: 10.5px; font-family: var(--font-mono); color: #cbd5e1; line-height: 1.4; }
+    .salvo-status { font-size: 10px; text-align: center; color: #64748b; font-family: var(--font-mono); }
+    .campo-erro { border-color: var(--rose) !important; }
+
+    /* BOTÕES DE MODO (barra lateral / janela) */
+    .header-acoes { display: flex; align-items: center; gap: 5px; }
+    .header-btn {
+      background: rgba(223, 186, 115, 0.12);
+      border: 1px solid rgba(223, 186, 115, 0.35);
+      color: #dfba73;
+      border-radius: 4px;
+      width: 24px;
+      height: 22px;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .header-btn:hover { background: rgba(223, 186, 115, 0.3); color: #fff; }
+
+    /* Fora do popup (barra lateral ou janela) sobra espaço: usa a largura toda */
+    body.modo-painel { width: 100%; min-width: 300px; }
+    body.modo-painel .header { position: sticky; top: 0; z-index: 10; }
+    /* Quanto mais largo, mais colunas: 1 na barra lateral, 2 ou 3 numa guia inteira */
+    body.modo-painel .content {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      align-items: start;
+      gap: 16px;
+      padding: 18px 20px 26px;
+    }
+    body.modo-painel .grupo {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid rgba(223, 186, 115, 0.12);
+      border-radius: 8px;
+      padding: 12px 13px;
+    }
+    body.modo-painel .grupo .section-title { margin-top: 0; }
+
+    /* AJUDE O CRIADOR, AVISO DE CONFIGURAÇÃO E TUTORIAL (versão pública) */
+    .doar-card {
+      background: linear-gradient(180deg, rgba(223, 186, 115, 0.12), rgba(223, 186, 115, 0.04));
+      border: 1px solid rgba(223, 186, 115, 0.35);
+      border-radius: 7px;
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .doar-titulo {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+    .doar-texto { font-size: 10.5px; color: #94a3b8; line-height: 1.45; }
+    .doar-bmc {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      background: linear-gradient(180deg, #ffdd00 0%, #f5c400 100%);
+      color: #0d1117;
+      border: 1px solid #97732a;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11.5px;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .doar-bmc:hover { filter: brightness(1.08); }
+
+    /* Separador "ou" entre o botão do BMC e as linhas de PIX/cripto */
+    .doar-ou {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9px;
+      color: #64748b;
+      font-family: var(--font-mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin: -1px 0;
+    }
+    .doar-ou::before, .doar-ou::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(223, 186, 115, 0.2);
+    }
+
+    .doar-linha { display: flex; align-items: center; gap: 6px; }
+    .doar-rotulo {
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      color: #06090d;
+      background: linear-gradient(180deg, var(--gold-bright), #97732a);
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .doar-valor {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: #cbd5e1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      user-select: all;
+    }
+    .doar-copiar {
+      background: rgba(223, 186, 115, 0.15);
+      border: 1px solid rgba(223, 186, 115, 0.4);
+      color: var(--gold-primary);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .doar-copiar:hover { background: rgba(223, 186, 115, 0.3); color: #fff; }
+    .doar-nota { font-size: 9px; color: #64748b; font-family: var(--font-mono); margin-top: -3px; }
+
+    .aviso-config {
+      background: linear-gradient(180deg, rgba(244, 63, 94, 0.18), rgba(244, 63, 94, 0.06));
+      border: 1px solid rgba(244, 63, 94, 0.45);
+      border-radius: 6px;
+      padding: 9px 11px;
+      font-size: 11px;
+      line-height: 1.45;
+      color: #fecdd3;
+    }
+    .aviso-config b { color: #fff; }
+    .btn-tutorial {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      background: linear-gradient(180deg, #18232e, #0c141c);
+      border: 1px solid var(--gold-border);
+      color: #dfba73;
+      border-radius: 5px;
+      padding: 7px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .btn-tutorial:hover { border-color: #dfba73; color: #fff; }
+    .btn-sugestao {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0.05));
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      color: #a7f3d0;
+      border-radius: 5px;
+      padding: 7px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .btn-sugestao:hover { border-color: var(--emerald); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <!-- CABEÇALHO OBSIDIAN & GOLD -->
+  <div class="header">
+    <div class="header-brand">
+      <!-- Ícone Insígnia Vetorial -->
+      <svg class="header-insignia" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="#dfba73" stroke-width="1.2" fill="#0c141d"/>
+        <path d="M 2 12 A 10 10 0 0 1 22 12 Z" fill="#97732a"/>
+        <path d="M 2 12 A 10 10 0 0 0 22 12 Z" fill="#080e14"/>
+        <rect x="2" y="11" width="20" height="2" fill="#05080c"/>
+        <circle cx="12" cy="12" r="3.2" fill="#1b2633" stroke="#dfba73" stroke-width="1"/>
+        <circle cx="12" cy="12" r="1.6" fill="#fef08a"/>
+      </svg>
+      <div class="header-titles">
+        <h3>PokéWatch</h3>
+        <p>Obsidian Cockpit</p>
+      </div>
+    </div>
+    <div class="header-acoes">
+      <button type="button" class="header-btn" id="btnBarraLateral" data-i18n-title="popup.btnBarraLateral" title="Abrir na barra lateral do Chrome">⇥</button>
+      <button type="button" class="header-btn" id="btnJanela" data-i18n-title="popup.btnJanela" title="Abrir em janela separada">⤢</button>
+      <span class="header-version" id="headerVersao">v—</span>
+    </div>
+  </div>
+
+  <!-- BARRA DE SELEÇÃO MULTI-CONTAS -->
+  <div class="account-tabs-wrapper" id="accountTabsWrapper" style="display: none;">
+    <div class="account-tabs-title" data-i18n="popup.contasDetectadas">Contas no Jogo Detectadas:</div>
+    <div class="account-tabs" id="accountTabs"></div>
+  </div>
+
+  <div class="content">
+
+    <!-- AJUDE O CRIADOR -->
+    <div class="doar-card">
+      <div class="doar-titulo" data-i18n="pub.doarTitulo">❤️ Ajude o criador</div>
+      <div class="doar-texto" data-i18n="pub.doarTexto">O Pok3Watch é gratuito, sem anúncios e não vende nenhum dado seu. Se ele já te salvou um shiny, considere ajudar:</div>
+      <a class="doar-bmc" href="https://www.buymeacoffee.com/gaamorais" target="_blank" rel="noreferrer" data-i18n="pub.bmc">☕ Buy me a coffee</a>
+      <div class="doar-ou" data-i18n="pub.ou">ou</div>
+      <div class="doar-linha">
+        <span class="doar-rotulo">PIX</span>
+        <span class="doar-valor" title="beff6512-b8a0-416e-9ffc-7a6ec2b28fcb">beff6512-b8a0-416e-9ffc-7a6ec2b28fcb</span>
+        <button type="button" class="doar-copiar" data-copiar="beff6512-b8a0-416e-9ffc-7a6ec2b28fcb" data-i18n="popup.copiar">copiar</button>
+      </div>
+      <div class="doar-linha">
+        <span class="doar-rotulo">CRIPTO</span>
+        <span class="doar-valor" title="0xeadA648b08F0693910d2C193c40d10C6654f13F0">0xeadA648b08F0693910d2C193c40d10C6654f13F0</span>
+        <button type="button" class="doar-copiar" data-copiar="0xeadA648b08F0693910d2C193c40d10C6654f13F0" data-i18n="popup.copiar">copiar</button>
+      </div>
+      <div class="doar-nota" data-i18n="pub.criptoNota">USDT ou USDC em redes EVM (BSC, Polygon, Arbitrum, Ethereum)</div>
+    </div>
+
+
+    <!-- 1. CARD DE STATUS DO JOGO COM HEARTBEAT -->
+    <div id="statusBox" class="status-card">
+      <div class="status-card-inner">
+        <div class="heartbeat-dot"></div>
+        <span data-i18n="popup.verificandoAba">Verificando aba do jogo...</span>
+      </div>
+      <span class="status-card-hint">24/7</span>
+    </div>
+
+    <!-- NOVO CARD: HUNT & SESSÃO REAL -->
+    <div id="huntDashboard" class="hunt-dashboard" style="display: none;">
+      <div class="hunt-header">
+        <span class="hunt-title" data-i18n="popup.huntTitulo">⚔️ Sessão da Hunt</span>
+        <span id="huntTempo" class="hunt-time">0h 00m</span>
+      </div>
+      <div class="hunt-grid">
+        <div class="hunt-stat">
+          <div class="hunt-stat-lbl"><span data-i18n="popup.huntCapturados">Capturados</span><span>🎯</span></div>
+          <div id="huntCapturados" class="hunt-stat-val val-gold">0</div>
+        </div>
+        <div class="hunt-stat">
+          <div class="hunt-stat-lbl"><span data-i18n="popup.huntShinies">Shinies</span><span>✨</span></div>
+          <div id="huntShinies" class="hunt-stat-val" style="color: #38bdf8;">0</div>
+        </div>
+        <div class="hunt-stat">
+          <div class="hunt-stat-lbl"><span data-i18n="popup.huntDerrotados">Derrotados</span><span>⚔️</span></div>
+          <div id="huntDerrotados" class="hunt-stat-val">0</div>
+        </div>
+        <div class="hunt-stat">
+          <div class="hunt-stat-lbl"><span data-i18n="popup.huntSaldo">Saldo Hunt</span><span>💰</span></div>
+          <div id="huntSaldo" class="hunt-stat-val val-green">+$0</div>
+        </div>
+      </div>
+      <div id="huntRateRow" class="hunt-footer-rate">
+        <span id="huntRitmoSaldo">📈 +$0/h</span>
+        <span id="huntRitmoXp" style="color:#fde047;">⚡ 0 XP/h</span>
+      </div>
+    </div>
+
+    <!-- IDIOMA -->
+    <div class="form-group">
+      <label id="rotuloIdioma" data-i18n="popup.idioma">Idioma</label>
+      <select id="idioma">
+        <option value="auto">Automático / Automatic</option>
+        <option value="pt">Português</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+      </select>
+    </div>
+
+    <!-- 2. WHATSAPP VIA CALLMEBOT -->
+    <div class="section-title" data-i18n="pub.secaoWhatsApp">Canal WhatsApp (CallMeBot)</div>
+
+    <div id="avisoConfig" class="aviso-config" style="display:none;" data-i18n="pub.avisoConfig">
+      ⚠️ <b>Falta configurar o WhatsApp.</b> Sem o número e a API Key aqui embaixo, nenhum alerta é enviado.
+    </div>
+
+    <div class="regras-ajuda">
+      <span data-i18n="pub.passosTitulo">Liberação do WhatsApp (uma vez só):</span><br>
+      <span data-i18n="pub.passo1a">1) Abra</span>
+      <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank" rel="noreferrer" style="color:#fef08a;">callmebot.com</a>
+      <span data-i18n="pub.passo1b">e salve nos contatos o número que aparece lá.</span><br>
+      <span data-i18n="pub.passo2">2) Mande para esse contato:</span> <b>I allow callmebot to send me messages</b><br>
+      <span data-i18n="pub.passo3">3) O bot responde com a sua API Key. Cole ela aqui embaixo.</span>
+    </div>
+
+    <a class="btn-tutorial" href="tutorial.html" target="_blank" rel="noreferrer" data-i18n="pub.abrirTutorial">📖 Abrir o tutorial completo</a>
+
+    <div class="form-group">
+      <label data-i18n="pub.numeroLabel">Seu número com DDD (só os dígitos)</label>
+      <input type="text" id="numeroTelefone" data-i18n-ph="popup.numeroPlaceholder" placeholder="Ex: 11998454621">
+      <div class="dica" data-i18n="pub.numeroDica">Sem +55 e sem espaços. Se você puser o 55 na frente também funciona.</div>
+      <div id="erroTelefone" class="regra-erro" style="display:none;" data-i18n="popup.numeroErro">Número inválido: use DDD + telefone (10 a 13 dígitos). O número salvo antes continua valendo.</div>
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="pub.apiKeyLabel">API Key do CallMeBot (só o final)</label>
+      <input type="text" id="callMeBotKey" placeholder="Ex: 1234567">
+      <div class="dica">
+        <span data-i18n="pub.apiKeyDica1">O bot responde com um link tipo</span>
+        <span style="font-family:var(--font-mono);color:#94a3b8;">…&amp;apikey=<b style="color:#fef08a;">1234567</b></span>.
+        <span data-i18n="pub.apiKeyDica2">Cole aqui só o que vem depois de apikey=. Se colar o link inteiro, a chave é aproveitada sozinha.</span>
+      </div>
+      <div id="erroApiKey" class="regra-erro" style="display:none;" data-i18n="pub.apiKeyErro">Sem a API Key o CallMeBot recusa o envio.</div>
+    </div>
+
+    <div class="dica" data-i18n="pub.dicaSoTexto">O CallMeBot é gratuito e envia só texto, então esta versão não manda print. Alertas seguidos saem espaçados para o bot não recusar.</div>
+
+    <!-- 3. REGRAS DE ALERTA DE CAPTURA -->
+    <div class="section-title" data-i18n="popup.secaoRegras">Regras de Alerta de Captura</div>
+    <div class="regras-ajuda" data-i18n="popup.regrasAjuda">
+      Dentro da regra vale <b>E</b>. Entre regras vale <b>OU</b> (basta uma bater).
+      Nenhuma raridade marcada = qualquer raridade. IV 0 = qualquer IV.
+    </div>
+    <div id="listaRegras" class="compact-rule-list"></div>
+    <div class="regras-acoes">
+      <button type="button" id="btnNovaRegra" class="btn btn-test btn-mini" data-i18n="popup.novaRegra">+ Nova regra</button>
+      <button type="button" id="btnRestaurarRegras" class="btn btn-reset btn-mini" data-i18n="popup.restaurarRegras">Restaurar padrão</button>
+    </div>
+
+    <div class="teste-rapido">
+      <div class="teste-titulo" data-i18n="popup.testeTitulo">🧪 Teste rápido — e se eu pegar…</div>
+      <div class="teste-linha">
+        <select id="testeRaridade"></select>
+        <input type="number" id="testeIv" class="teste-iv" min="0" max="192" value="165" title="IV">
+        <label class="teste-shiny" title="Shiny"><input type="checkbox" id="testeShiny"> ✨</label>
+      </div>
+      <div id="testeResultado" class="teste-resultado">—</div>
+    </div>
+
+    <!-- 4. POKÉBOLAS -->
+    <div class="section-title" data-i18n="popup.secaoBolas">Pokébolas</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label data-i18n="popup.bolaVigiada">Bola vigiada</label>
+        <select id="bolaMonitorada">
+          <option value="Poké Ball">🔴 Poké Ball</option>
+          <option value="Great Ball">🔵 Great Ball</option>
+          <option value="Ultra Ball" selected>🟡 Ultra Ball</option>
+          <option value="Idle Ball">⚡ Idle Ball</option>
+          <option value="Premier Ball">⚪ Premier Ball</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="popup.avisarAbaixoDe">Avisar abaixo de</label>
+        <div class="stepper-wrap">
+          <button type="button" class="stepper-btn" id="btnBolasDec">−</button>
+          <input type="number" id="limiteBolas" class="stepper-input" min="0" placeholder="100" value="100">
+          <span class="stepper-unit" data-i18n="popup.unidade">un</span>
+          <button type="button" class="stepper-btn" id="btnBolasInc">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="dica" data-i18n="popup.dicaAutoHelper">Com o Auto-Helper aberto, a extensão vigia sozinha a bola escolhida no Auto-Catch.</div>
+
+    <div class="switch-row">
+      <div class="switch-info">
+        <label class="switch-title" for="alertaBolasAtivo" data-i18n="popup.estoqueBaixo">Estoque Baixo</label>
+        <span class="switch-subtitle" data-i18n="popup.estoqueBaixoSub">Repete a cada 15 min enquanto estiver abaixo</span>
+      </div>
+      <label class="pw-switch">
+        <input type="checkbox" id="alertaBolasAtivo">
+        <span class="pw-slider"></span>
+      </label>
+    </div>
+
+    <div class="switch-row">
+      <div class="switch-info">
+        <label class="switch-title" for="alertaSemBolas" data-i18n="popup.acabaramBolas">Acabaram as Pokébolas</label>
+        <span class="switch-subtitle" data-i18n="popup.acabaramBolasSub">Jogo mostrando "Sem Pokébolas" por 20s</span>
+      </div>
+      <label class="pw-switch">
+        <input type="checkbox" id="alertaSemBolas">
+        <span class="pw-slider"></span>
+      </label>
+    </div>
+
+    <!-- 5. DROPS E RESUMO -->
+    <div class="section-title" data-i18n="popup.secaoDrops">Drops & Resumo</div>
+
+    <div class="switch-row">
+      <div class="switch-info">
+        <label class="switch-title" for="alertaDropRaro" data-i18n="popup.dropRaro">Alerta de Drop Raro</label>
+        <span class="switch-subtitle" data-i18n="popup.dropRaroSub">Precisa do Hunt Analyzer aberto no jogo</span>
+      </div>
+      <label class="pw-switch">
+        <input type="checkbox" id="alertaDropRaro">
+        <span class="pw-slider"></span>
+      </label>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label data-i18n="popup.itemRaroAPartir">Item raro a partir de</label>
+        <!-- Os rótulos (raridade + faixa de preço) são montados no popup.js, no idioma escolhido -->
+        <select id="raridadeMinimaItem">
+          <option value="Incomum">Incomum ($100+)</option>
+          <option value="Raro">Raro ($1.000+)</option>
+          <option value="Épico" selected>Épico ($10.000+)</option>
+          <option value="Lendário">Lendário ($50.001+)</option>
+          <option value="Mítico">Mítico ($150.001+)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="popup.resumoACada">Resumo a cada</label>
+        <select id="resumoHoras">
+          <option value="1" selected>1 hora</option>
+          <option value="2">2 horas</option>
+          <option value="3">3 horas</option>
+          <option value="6">6 horas</option>
+          <option value="12">12 horas</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="popup.itensSempre">Itens que sempre avisam (separe por vírgula)</label>
+      <input type="text" id="itensMonitorados" data-i18n-ph="popup.itensPlaceholder" placeholder="Ex: Metal Stone, Pheromone, Upgrade">
+    </div>
+
+    <div class="switch-row">
+      <div class="switch-info">
+        <label class="switch-title" for="resumoAtivo" data-i18n="popup.resumoPeriodico">Resumo Periódico</label>
+        <span class="switch-subtitle" data-i18n="popup.resumoPeriodicoSub">Melhores Pokémon, saldo, loot e itens raros</span>
+      </div>
+      <label class="pw-switch">
+        <input type="checkbox" id="resumoAtivo">
+        <span class="pw-slider"></span>
+      </label>
+    </div>
+
+    <!-- 6. VIGILÂNCIA -->
+    <div class="section-title" data-i18n="popup.secaoVigilancia">Vigilância</div>
+
+    <div class="switch-row">
+      <div class="switch-info">
+        <label class="switch-title" for="alertaDesconexao" data-i18n="popup.jogoDesconectado">Jogo Desconectado</label>
+        <span class="switch-subtitle" data-i18n="popup.jogoDesconectadoSub">Queda, conta em uso, manutenção ou aba sem sinal</span>
+      </div>
+      <label class="pw-switch">
+        <input type="checkbox" id="alertaDesconexao">
+        <span class="pw-slider"></span>
+      </label>
+    </div>
+
+    <!-- 7. QOL & FILTROS VISUAIS (IV TOOL) -->
+    <div class="section-title" data-i18n="popup.secaoQoL">QoL & Filtros Visuais</div>
+
+    <div class="switch-row">
+      <div class="switch-info">
+        <label class="switch-title" for="bloquearAnuncios" data-i18n="popup.bloquearAnuncios">Bloquear Anúncios de Shiny</label>
+        <span class="switch-subtitle" data-i18n="popup.bloquearAnunciosSub">Oculta avisos globais de shiny no jogo</span>
+      </div>
+      <label class="pw-switch">
+        <input type="checkbox" id="bloquearAnuncios">
+        <span class="pw-slider"></span>
+      </label>
+    </div>
+
+    <div class="switch-row">
+      <div class="switch-info">
+        <label class="switch-title" for="bloquearPromocoes" data-i18n="popup.bloquearPromocoes">Bloquear Promoções da Loja</label>
+        <span class="switch-subtitle" data-i18n="popup.bloquearPromocoesSub">Oculta banners e popups de diamantes</span>
+      </div>
+      <label class="pw-switch">
+        <input type="checkbox" id="bloquearPromocoes">
+        <span class="pw-slider"></span>
+      </label>
+    </div>
+
+    <div class="switch-row">
+      <div class="switch-info">
+        <label class="switch-title" for="lembreteGift" data-i18n="popup.lembreteGift">Lembrete de Daily Gift</label>
+        <span class="switch-subtitle" data-i18n="popup.lembreteGiftSub">Exibe aviso no HUD quando pronto para coletar</span>
+      </div>
+      <label class="pw-switch">
+        <input type="checkbox" id="lembreteGift">
+        <span class="pw-slider"></span>
+      </label>
+    </div>
+
+    <div class="switch-row">
+      <div class="switch-info">
+        <label class="switch-title" for="alertaGiftWhatsApp" data-i18n="popup.giftWhatsApp">Alerta de Gift no WhatsApp</label>
+        <span class="switch-subtitle" data-i18n="popup.giftWhatsAppSub">Avisa no celular quando o presente estiver pronto</span>
+      </div>
+      <label class="pw-switch">
+        <input type="checkbox" id="alertaGiftWhatsApp">
+        <span class="pw-slider"></span>
+      </label>
+    </div>
+
+    <!-- 8. ROTAS DE FARM & SPAWNS (IV TOOL) -->
+    <div class="accordion-card">
+      <div class="accordion-header" id="toggleAccordionRotas">
+        <div class="accordion-title-wrap">
+          <span data-i18n="popup.rotasTitulo">🗺️ Rotas de Farm & Spawns</span>
+          <span class="accordion-badge" id="badgeRotaSelecionada">Lv 1</span>
+        </div>
+        <span class="accordion-chevron" id="chevronRotas">▼</span>
+      </div>
+
+      <div class="accordion-body" id="bodyAccordionRotas">
+        <div class="route-levels-grid" id="routeLevelsGrid">
+          <button type="button" class="route-lvl-btn active" data-lvl="1">Lv 1</button>
+          <button type="button" class="route-lvl-btn" data-lvl="10">Lv 10</button>
+          <button type="button" class="route-lvl-btn" data-lvl="20">Lv 20</button>
+          <button type="button" class="route-lvl-btn" data-lvl="30">Lv 30</button>
+          <button type="button" class="route-lvl-btn" data-lvl="40">Lv 40</button>
+          <button type="button" class="route-lvl-btn" data-lvl="50">Lv 50</button>
+          <button type="button" class="route-lvl-btn" data-lvl="60">Lv 60</button>
+          <button type="button" class="route-lvl-btn" data-lvl="80">Lv 80</button>
+          <button type="button" class="route-lvl-btn" data-lvl="100">Lv 100</button>
+          <button type="button" class="route-lvl-btn" data-lvl="150">Lv 150</button>
+          <button type="button" class="route-lvl-btn" data-lvl="510">Lv 510</button>
+          <button type="button" class="route-lvl-btn" data-lvl="520">Lv 520</button>
+          <button type="button" class="route-lvl-btn" data-lvl="530">Lv 530</button>
+          <button type="button" class="route-lvl-btn" data-lvl="540">Lv 540</button>
+          <button type="button" class="route-lvl-btn" data-lvl="550">Lv 550</button>
+          <button type="button" class="route-lvl-btn" data-lvl="560">Lv 560</button>
+          <button type="button" class="route-lvl-btn" data-lvl="580">Lv 580</button>
+          <button type="button" class="route-lvl-btn" data-lvl="600">Lv 600</button>
+        </div>
+        <div class="route-spawns-list" id="routeSpawnsList"></div>
+      </div>
+    </div>
+
+    <!-- PRINTS: escondido na versão pública (CallMeBot envia só texto) -->
+    <div class="accordion-card" style="display:none;">
+      <div class="accordion-header" id="toggleAccordionPrints">
+        <div class="accordion-title-wrap">
+          <span data-i18n="popup.printsTitulo">📸 Filtros de Prints Inteligentes</span>
+          <span class="accordion-badge" id="badgeFiltrosAtivos">4 ativos</span>
+        </div>
+        <span class="accordion-chevron" id="chevronPrints">▼</span>
+      </div>
+
+      <div class="accordion-body" id="bodyAccordionPrints">
+        <!-- Print Shiny -->
+        <div class="switch-row">
+          <div class="switch-info">
+            <label class="switch-title" for="printShiny" data-i18n="popup.printShiny">Print ao Capturar Shiny</label>
+            <span class="switch-subtitle" data-i18n="popup.printShinySub">Registro visual imediato</span>
+          </div>
+          <label class="pw-switch">
+            <input type="checkbox" id="printShiny" checked>
+            <span class="pw-slider"></span>
+          </label>
+        </div>
+
+        <!-- Print Drop Raro -->
+        <div class="switch-row">
+          <div class="switch-info">
+            <label class="switch-title" for="printDrop" data-i18n="popup.printDrop">Print em Drops Raros</label>
+            <span class="switch-subtitle" data-i18n="popup.printDropSub">Comprovante de obtenção de itens</span>
+          </div>
+          <label class="pw-switch">
+            <input type="checkbox" id="printDrop" checked>
+            <span class="pw-slider"></span>
+          </label>
+        </div>
+
+        <!-- Print IV Alto -->
+        <div class="switch-row">
+          <div class="switch-info">
+            <label class="switch-title" for="printIv" data-i18n="popup.printIv">Print em Alertas Máximos</label>
+            <span class="switch-subtitle" data-i18n="popup.printIvSub">Capturas 🚨 que não são shiny</span>
+          </div>
+          <label class="pw-switch">
+            <input type="checkbox" id="printIv" checked>
+            <span class="pw-slider"></span>
+          </label>
+        </div>
+
+        <!-- Print Jogo Travado -->
+        <div class="switch-row">
+          <div class="switch-info">
+            <label class="switch-title" for="printTravado" data-i18n="popup.printTravado">Print se o Jogo Desconectar</label>
+            <span class="switch-subtitle" data-i18n="popup.printTravadoSub">Mostra a tela de erro do jogo</span>
+          </div>
+          <label class="pw-switch">
+            <input type="checkbox" id="printTravado">
+            <span class="pw-slider"></span>
+          </label>
+        </div>
+
+        <!-- Crop Inteligente -->
+        <div class="switch-row">
+          <div class="switch-info">
+            <label class="switch-title" for="cropInteligente" data-i18n="popup.cropInteligente">Crop Inteligente (Foco no Log)</label>
+            <span class="switch-subtitle" data-i18n="popup.cropInteligenteSub">Recorta área nobre sem poluição</span>
+          </div>
+          <label class="pw-switch">
+            <input type="checkbox" id="cropInteligente" checked>
+            <span class="pw-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. TELEMETRIA DE POKÉBOLAS -->
+    <div class="section-title" data-i18n="popup.secaoTelemetria">Telemetria de Estoque</div>
+    <div class="metrics">
+      <div class="metric">
+        <span data-i18n="popup.estoqueAtual">Estoque Atual</span>
+        <strong id="bolasTotal">--</strong>
+      </div>
+      <div class="metric">
+        <span data-i18n="popup.gastoUltimaHora">Gasto Última 1h</span>
+        <strong id="bolasGasto">--</strong>
+      </div>
+      <div class="metric">
+        <span data-i18n="popup.ritmoConsumo">Ritmo de Consumo</span>
+        <strong id="bolasRitmo">--/h</strong>
+      </div>
+      <div class="metric metric-wide">
+        <span data-i18n="popup.previsaoDuracao">Previsão de Duração</span>
+        <strong id="bolasDuracao" data-i18n="popup.aguardandoLeitura">Aguardando leitura do jogo...</strong>
+      </div>
+    </div>
+    <div id="bolasDetalhes" class="details" data-i18n="popup.abraOJogo">Abra o jogo até o estoque aparecer na tela.</div>
+
+    <!-- 7. STATUS DE ENTREGA DO WHATSAPP -->
+    <div class="whatsapp-card">
+      <div class="whatsapp-icon-pip" id="whatsappPip"></div>
+      <div id="whatsappStatus" class="mini-status" data-i18n="popup.whatsappNaoTestado">WhatsApp ainda não testado.</div>
+    </div>
+
+    <!-- 8. BOTÕES DE CONTROLE -->
+    <div id="statusSalvo" class="salvo-status" data-i18n="popup.salvamAutomatico">As alterações salvam sozinhas</div>
+    <div class="buttons">
+      <button id="btnSalvar" class="btn btn-save">
+        <span data-i18n="popup.btnSalvar">Salvar Configurações</span>
+      </button>
+      <button id="btnTestar" class="btn btn-test">
+        <span data-i18n="popup.btnTestar">Testar Notificação</span>
+      </button>
+      <button id="btnResetarMetricas" class="btn btn-reset">
+        <span data-i18n="popup.btnResetar">Resetar Métricas de Farm</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" data-i18n="popup.toastPadrao">Configurações salvas com sucesso!</div>
+
+  <script src="idiomas.js"></script>
+  <script src="cerebro.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

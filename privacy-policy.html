@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Política de Privacidade — Pok3Watch</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-dim: #8b949e;
+      --gold: #dfba73;
+      --mono: "SF Mono", "Cascadia Code", "Roboto Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      line-height: 1.65;
+      padding: 40px 20px 80px;
+    }
+    .folha { max-width: 780px; margin: 0 auto; }
+    header { margin-bottom: 32px; }
+    h1 {
+      font-size: 28px;
+      font-family: var(--mono);
+      color: var(--gold);
+      letter-spacing: 0.02em;
+      margin-bottom: 4px;
+    }
+    header p { color: var(--text-dim); font-size: 13px; }
+    h2 {
+      font-size: 18px;
+      color: var(--gold);
+      margin: 32px 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    p, li { margin-bottom: 10px; color: var(--text); }
+    ul { padding-left: 24px; }
+    b, strong { color: #fff; }
+    code {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--gold);
+    }
+    .aviso {
+      background: var(--card);
+      border-left: 3px solid var(--gold);
+      padding: 12px 16px;
+      margin: 14px 0;
+      border-radius: 0 6px 6px 0;
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+    .lang-nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    .lang-nav a {
+      color: var(--gold);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+    .lang-nav a:hover { border-color: var(--gold); }
+    footer {
+      margin-top: 48px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 13px;
+      font-family: var(--mono);
+      text-align: center;
+    }
+    a { color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="folha">
+    <div class="lang-nav">
+      <a href="#pt">Português</a>
+      <a href="#en">English</a>
+      <a href="#es">Español</a>
+    </div>
+
+    <header>
+      <h1>Pok3Watch — Política de Privacidade</h1>
+      <p>Última atualização: 19 de setembro de 2026</p>
+    </header>
+
+    <!-- ==================== PORTUGUÊS ==================== -->
+    <section id="pt">
+      <h2>Português</h2>
+
+      <p>
+        <b>Pok3Watch</b> é uma extensão de navegador gratuita, sem anúncios, que observa a tela do jogo
+        <a href="https://poke.idleworld.online" target="_blank" rel="noreferrer">Poke Idle World</a> e envia
+        alertas para o WhatsApp do próprio usuário. Esta política descreve, de forma direta, o que a
+        extensão faz com dados.
+      </p>
+
+      <h2>1. O que a extensão coleta</h2>
+      <p>
+        A extensão guarda no seu próprio navegador, através de <code>chrome.storage.local</code>, os
+        seguintes dados que <b>você mesmo digita</b> no popup:
+      </p>
+      <ul>
+        <li><b>Número de telefone do WhatsApp</b> — para endereçar o alerta a você.</li>
+        <li><b>API Key do CallMeBot</b> — chave gratuita gerada pelo próprio CallMeBot, usada para autorizar o envio da mensagem.</li>
+        <li><b>Preferências e regras de alerta</b> (raridade, IV mínimo, idioma, itens monitorados, etc.).</li>
+        <li><b>Histórico local de capturas</b> — usado apenas para montar o resumo periódico. Nunca sai do seu navegador.</li>
+      </ul>
+
+      <div class="aviso">
+        O <code>chrome.storage.local</code> <b>não é criptografado</b>. Qualquer pessoa com acesso ao seu
+        perfil do Chrome pode ver esses dados. Guarde esse computador como você guarda o próprio WhatsApp.
+      </div>
+
+      <h2>2. O que a extensão envia para fora do seu computador</h2>
+      <p>
+        Quando um alerta configurado por você dispara, a extensão envia <b>apenas</b>:
+      </p>
+      <ul>
+        <li>o <b>texto do alerta</b> (nome do Pokémon, raridade, IV, etc.), e</li>
+        <li>o seu <b>número de WhatsApp</b> e sua <b>API Key</b>,</li>
+      </ul>
+      <p>
+        para <code>api.callmebot.com</code>. O <b>CallMeBot</b> é um serviço gratuito de terceiros, escolhido por você, responsável por entregar a mensagem no seu WhatsApp. Consulte a política de privacidade deles em <a href="https://www.callmebot.com/" target="_blank" rel="noreferrer">callmebot.com</a>.
+      </p>
+      <p>
+        <b>Não existe servidor próprio do Pok3Watch</b> recebendo informação. Nenhum outro dado é transmitido.
+      </p>
+
+      <h2>3. O que a extensão NÃO faz</h2>
+      <ul>
+        <li>Não coleta e não envia dados de navegação, histórico ou informações pessoais além dos citados.</li>
+        <li>Não usa cookies, pixels de rastreamento ou identificadores publicitários.</li>
+        <li>Não vende, aluga ou compartilha seus dados com terceiros além do CallMeBot (necessário para o envio).</li>
+        <li>Não usa seus dados para publicidade, análise de crédito ou qualquer finalidade fora do propósito de mandar seus alertas.</li>
+        <li>Não clica, não joga e não envia comandos para o jogo — só lê o que já está na tela.</li>
+      </ul>
+
+      <h2>4. Como apagar seus dados</h2>
+      <p>
+        Basta desinstalar a extensão. Todo o conteúdo do <code>chrome.storage.local</code> é removido pelo próprio Chrome. Se quiser apagar sem desinstalar, use "Limpar dados" no popup ou <b>chrome://extensions</b> → Pok3Watch → Detalhes → Dados do site.
+      </p>
+
+      <h2>5. Contato</h2>
+      <p>
+        Para qualquer dúvida sobre privacidade, escreva para <a href="mailto:gaamorais1@gmail.com">gaamorais1@gmail.com</a>.
+      </p>
+    </section>
+
+    <!-- ==================== ENGLISH ==================== -->
+    <section id="en">
+      <h2>English</h2>
+
+      <p>
+        <b>Pok3Watch</b> is a free, ad-free browser extension that watches the
+        <a href="https://poke.idleworld.online" target="_blank" rel="noreferrer">Poke Idle World</a> screen
+        and sends WhatsApp alerts to the user themselves. This policy describes, plainly, what the
+        extension does with data.
+      </p>
+
+      <h2>1. What the extension collects</h2>
+      <p>
+        The extension stores in your own browser, via <code>chrome.storage.local</code>, the following data
+        that <b>you type yourself</b> into the popup:
+      </p>
+      <ul>
+        <li><b>WhatsApp phone number</b> — to address the alert to you.</li>
+        <li><b>CallMeBot API Key</b> — a free key issued by CallMeBot itself, used to authorize sending.</li>
+        <li><b>Alert preferences and rules</b> (rarity, minimum IV, language, watched items, etc.).</li>
+        <li><b>Local catch history</b> — used only to build the periodic summary. It never leaves your browser.</li>
+      </ul>
+
+      <div class="aviso">
+        <code>chrome.storage.local</code> <b>is not encrypted</b>. Anyone with access to your Chrome
+        profile can read it. Treat this computer the way you treat your own WhatsApp.
+      </div>
+
+      <h2>2. What the extension sends off your computer</h2>
+      <p>
+        When an alert you configured fires, the extension sends <b>only</b>:
+      </p>
+      <ul>
+        <li>the <b>alert text</b> (Pokémon name, rarity, IV, etc.), and</li>
+        <li>your <b>WhatsApp number</b> and your <b>API Key</b>,</li>
+      </ul>
+      <p>
+        to <code>api.callmebot.com</code>. <b>CallMeBot</b> is a free third-party service, chosen by you, responsible for delivering the message to your WhatsApp. See their policy at <a href="https://www.callmebot.com/" target="_blank" rel="noreferrer">callmebot.com</a>.
+      </p>
+      <p>
+        <b>There is no Pok3Watch server</b> receiving information. No other data is transmitted.
+      </p>
+
+      <h2>3. What the extension does NOT do</h2>
+      <ul>
+        <li>Does not collect or send browsing data, history, or personal information beyond the above.</li>
+        <li>Does not use cookies, tracking pixels or advertising IDs.</li>
+        <li>Does not sell, rent, or share your data with anyone other than CallMeBot (required for delivery).</li>
+        <li>Does not use your data for ads, credit scoring, or any purpose beyond sending your alerts.</li>
+        <li>Does not click, play, or send commands to the game — it only reads what is already on screen.</li>
+      </ul>
+
+      <h2>4. How to delete your data</h2>
+      <p>
+        Simply uninstall the extension. Chrome itself removes all <code>chrome.storage.local</code> data. To clear it without uninstalling, use "Clear data" in the popup or go to <b>chrome://extensions</b> → Pok3Watch → Details → Site data.
+      </p>
+
+      <h2>5. Contact</h2>
+      <p>
+        For privacy questions, write to <a href="mailto:gaamorais1@gmail.com">gaamorais1@gmail.com</a>.
+      </p>
+    </section>
+
+    <!-- ==================== ESPAÑOL ==================== -->
+    <section id="es">
+      <h2>Español</h2>
+
+      <p>
+        <b>Pok3Watch</b> es una extensión de navegador gratuita, sin anuncios, que observa la pantalla del
+        juego <a href="https://poke.idleworld.online" target="_blank" rel="noreferrer">Poke Idle World</a>
+        y envía alertas al WhatsApp del propio usuario. Esta política describe, de forma directa, qué hace la
+        extensión con los datos.
+      </p>
+
+      <h2>1. Qué recoge la extensión</h2>
+      <p>
+        La extensión guarda en tu propio navegador, mediante <code>chrome.storage.local</code>, los siguientes datos que <b>tú mismo escribes</b> en el popup:
+      </p>
+      <ul>
+        <li><b>Número de teléfono de WhatsApp</b> — para dirigir la alerta a ti.</li>
+        <li><b>API Key de CallMeBot</b> — clave gratuita emitida por el propio CallMeBot, usada para autorizar el envío.</li>
+        <li><b>Preferencias y reglas de alerta</b> (rareza, IV mínimo, idioma, objetos vigilados, etc.).</li>
+        <li><b>Historial local de capturas</b> — usado sólo para armar el resumen periódico. Nunca sale de tu navegador.</li>
+      </ul>
+
+      <div class="aviso">
+        <code>chrome.storage.local</code> <b>no está cifrado</b>. Cualquier persona con acceso a tu perfil de Chrome puede leerlo. Cuida esta computadora como cuidas tu propio WhatsApp.
+      </div>
+
+      <h2>2. Qué envía la extensión fuera de tu computadora</h2>
+      <p>
+        Cuando dispara una alerta que configuraste, la extensión envía <b>solo</b>:
+      </p>
+      <ul>
+        <li>el <b>texto de la alerta</b> (nombre del Pokémon, rareza, IV, etc.), y</li>
+        <li>tu <b>número de WhatsApp</b> y tu <b>API Key</b>,</li>
+      </ul>
+      <p>
+        a <code>api.callmebot.com</code>. <b>CallMeBot</b> es un servicio gratuito de terceros, elegido por ti, encargado de entregar el mensaje a tu WhatsApp. Consulta su política en <a href="https://www.callmebot.com/" target="_blank" rel="noreferrer">callmebot.com</a>.
+      </p>
+      <p>
+        <b>No existe servidor propio de Pok3Watch</b> recibiendo información. No se transmite ningún otro dato.
+      </p>
+
+      <h2>3. Qué NO hace la extensión</h2>
+      <ul>
+        <li>No recoge ni envía datos de navegación, historial ni información personal más allá de lo indicado.</li>
+        <li>No usa cookies, píxeles de rastreo ni identificadores publicitarios.</li>
+        <li>No vende, alquila ni comparte tus datos con nadie más allá de CallMeBot (necesario para el envío).</li>
+        <li>No usa tus datos para publicidad, evaluación crediticia ni ninguna finalidad ajena a enviar tus alertas.</li>
+        <li>No hace clic, no juega y no manda comandos al juego — sólo lee lo que ya está en pantalla.</li>
+      </ul>
+
+      <h2>4. Cómo borrar tus datos</h2>
+      <p>
+        Basta con desinstalar la extensión. El propio Chrome elimina todo lo de <code>chrome.storage.local</code>. Para borrarlo sin desinstalar, usa "Borrar datos" en el popup o entra a <b>chrome://extensions</b> → Pok3Watch → Detalles → Datos del sitio.
+      </p>
+
+      <h2>5. Contacto</h2>
+      <p>
+        Para cualquier duda de privacidad, escribe a <a href="mailto:gaamorais1@gmail.com">gaamorais1@gmail.com</a>.
+      </p>
+    </section>
+
+    <footer>
+      Pok3Watch — extensão gratuita para Poke Idle World<br>
+      Contato: gaamorais1@gmail.com
+    </footer>
+  </div>
+</body>
+</html>

@@ -425,7 +425,7 @@
    */
   function formatarResumo(dados) {
     const T = I();
-    const { horas, capturas = [], hunt = null, bolas = null, semBolas = false } = dados;
+    const { horas, capturas = [], hunt = null, dropsAlertados = [], bolas = null, semBolas = false } = dados;
     const linhas = [T.t('resumo.topo', { horas }), ''];
 
     const shinies = capturas.filter((c) => c.s).length;
@@ -462,9 +462,22 @@
         supply: formatarDinheiro(-Math.abs(hunt.supply))
       }));
       if (hunt.ganhoHora) linhas.push(T.t('resumo.ritmo', { ritmo: hunt.ganhoHora }));
-      const raros = (hunt.drops || []).filter((d) => d.motivo && d.ganho > 0);
+      // Funde duas fontes: os drops que ainda estão visíveis no Hunt Analyzer + os
+      // que o Pok3Watch já alertou no período. Assim o item entra no resumo mesmo
+      // se o painel esconder (item consumido, vendido, hunt reiniciada, etc.)
+      const somaPorNome = new Map();
+      (hunt.drops || []).filter((d) => d.motivo && d.ganho > 0).forEach((d) => {
+        somaPorNome.set(d.nome, (somaPorNome.get(d.nome) || 0) + d.ganho);
+      });
+      (dropsAlertados || []).forEach((d) => {
+        const nome = d.n || d.nome;
+        const ganho = d.g || d.ganho || 0;
+        if (!nome || ganho <= 0) return;
+        if (!somaPorNome.has(nome)) somaPorNome.set(nome, ganho);
+      });
+      const raros = [...somaPorNome.entries()];
       linhas.push(raros.length
-        ? T.t('resumo.itensRaros', { itens: raros.map((d) => `${d.nome} +${T.numero(d.ganho)}`).join(', ') })
+        ? T.t('resumo.itensRaros', { itens: raros.map(([nome, ganho]) => `${nome} +${T.numero(ganho)}`).join(', ') })
         : T.t('resumo.semItens'));
     } else {
       linhas.push(T.t('resumo.semHunt'));

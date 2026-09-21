@@ -16,6 +16,10 @@
     janelaLogEncontrada: false,
     fontePokebolas: null, // 'CAPTURA' | 'AUTO_HELPER' | null
     estoqueBolas: {},
+    amostrasBolas: [], // histórico {t, total} pra telemetria de consumo
+    ultimoJsonBolas: null,
+    ultimoPokemonPIW: null, // último Pokémon lido do card de inventário
+    ultimoPokemonPIWJson: null,
     capturasVistas: new Set(),
     totalSessao: 0,
     shiniesSessao: 0,
@@ -283,7 +287,9 @@
       ivMax: matchIV ? parseInt(matchIV[2], 10) : 192,
       ball: textoDe('.clog-ball'),
       dataHora: dataHora,
-      isShiny: linha.classList.contains('shiny')
+      isShiny: linha.classList.contains('shiny'),
+      // O próprio jogo marca a 1ª captura de cada espécie com o selo .clog-first ("1ª")
+      primeiraVez: Boolean(linha.querySelector('.clog-first'))
     };
   }
 
@@ -300,6 +306,32 @@
       s: captura.isShiny ? 1 : 0,
       lv: captura.level
     });
+
+    // 🆕 FIRST CATCH — a 1ª vez que ESSA espécie é capturada. A verdade vem do
+    // selo .clog-first do próprio jogo (não é Pokédex/coleção — é o evento).
+    if (captura.primeiraVez) {
+      (async () => {
+        try {
+          let total = 0;
+          if (window.PokeWatchFirstCatch) {
+            const r = await window.PokeWatchFirstCatch.registrar(captura.nome, {
+              iv: captura.iv,
+              level: captura.level,
+              raridade: captura.raridade || 'Desconhecida',
+              shiny: captura.isShiny
+            });
+            total = r.total;
+          }
+          const msg = window.PokeWatchFirstCatch
+            ? window.PokeWatchFirstCatch.formatarMensagem(captura.nome, total, captura.isShiny)
+            : `🆕 PRIMEIRA CAPTURA: ${captura.nome}!`;
+          console.log('[Pok3Watch] FIRST CATCH! ' + captura.nome);
+          enviarAlerta('PRIMEIRA_CAPTURA', msg, { pedirPrint: false });
+        } catch (e) {
+          console.warn('[Pok3Watch] Erro no First Catch:', e);
+        }
+      })();
+    }
 
     // Avalia no cérebro
     if (window.PokeWatchCerebro) {
@@ -432,14 +464,19 @@
     estado.fontePokebolas = fonte;
     estado.estoqueBolas = bolas;
 
+    const totalAtual = Object.values(bolas).reduce((a, b) => a + b, 0);
     const json = JSON.stringify(bolas);
     if (json !== estado.ultimoJsonBolas) {
       estado.ultimoJsonBolas = json;
+      const consumo = registrarAmostraBolas(totalAtual);
       chrome.storage.local.set({
         pokeBallStats: {
-          total: Object.values(bolas).reduce((a, b) => a + b, 0),
+          total: totalAtual,
           detalhes: bolas,
-          fonte: fonte === 'AUTO_HELPER' ? 'Auto-Helper' : 'Barra de Captura'
+          fonte: fonte === 'AUTO_HELPER' ? 'Auto-Helper' : 'Barra de Captura',
+          gastasUltimaHora: consumo.gastasUltimaHora,
+          gastoPorHora: consumo.gastoPorHora,
+          horasRestantes: consumo.horasRestantes
         }
       });
     }
@@ -452,6 +489,54 @@
         enviarAlerta('BOLAS_BAIXAS', avaliacao.mensagem);
       }
     }
+  }
+
+  // Telemetria de consumo de Pokébolas: mantém amostras {t,total} do estoque e
+  // infere gasto/ritmo pelas QUEDAS entre leituras. Aumentos (compra/reposição)
+  // não contam como gasto. Amostra só é registrada quando o estoque muda.
+  function registrarAmostraBolas(totalAtual) {
+    const agora = Date.now();
+    const UMA_HORA = 3600 * 1000;
+    const MIN_SPAN_H = 2 / 60; // só extrapola ritmo após ~2min de coleta
+
+    estado.amostrasBolas.push({ t: agora, total: totalAtual });
+    // Mantém ~90min de histórico (cobre a janela de 1h com folga)
+    const corte = agora - UMA_HORA * 1.5;
+    estado.amostrasBolas = estado.amostrasBolas.filter((a) => a.t >= corte);
+
+    const amostras = estado.amostrasBolas;
+    if (amostras.length < 2) {
+      return { gastasUltimaHora: 0, gastoPorHora: 0, horasRestantes: null };
+    }
+
+    const inicioJanela = agora - UMA_HORA;
+    let gastasUltimaHora = 0;
+    let gastoTotal = 0;
+    for (let i = 1; i < amostras.length; i++) {
+      const queda = amostras[i - 1].total - amostras[i].total;
+      if (queda > 0) {
+        gastoTotal += queda;
+        if (amostras[i].t >= inicioJanela) gastasUltimaHora += queda;
+      }
+    }
+
+    // Ritmo: com >=1h de dados usa o gasto real da última hora; com menos,
+    // extrapola pelo intervalo coberto pra não travar em 0/h eternamente.
+    const spanH = (amostras[amostras.length - 1].t - amostras[0].t) / UMA_HORA;
+    let gastoPorHora = 0;
+    if (spanH >= 1) {
+      gastoPorHora = Math.round(gastasUltimaHora);
+    } else if (spanH >= MIN_SPAN_H) {
+      gastoPorHora = Math.round(gastoTotal / spanH);
+    }
+
+    const horasRestantes = gastoPorHora > 0 ? totalAtual / gastoPorHora : null;
+
+    return {
+      gastasUltimaHora: Math.round(gastasUltimaHora),
+      gastoPorHora,
+      horasRestantes
+    };
   }
 
   // Hunt Analyzer (classes conferidas no código do jogo):
@@ -560,12 +645,26 @@
   function verificarDrops(leitura) {
     const C = window.PokeWatchCerebro;
     const base = estado.huntBase;
-    const reiniciou = !!base && (leitura.segundos + 5 < base.segundos ||
-      Object.entries(base.drops).some(([nome, d]) => (leitura.drops[nome]?.qtd || 0) < d.qtd));
-    estado.huntBase = { segundos: leitura.segundos, drops: leitura.drops };
+
+    // Só considera reinício quando o tempo da sessão volta pra trás.
+    // Um drop "sumir" da leitura NÃO é reinício — o painel do Hunt Analyzer pisca
+    // durante refresh e às vezes vem vazio por 1 tick. Sem essa proteção o alerta
+    // dobrava porque a base zerava e a próxima leitura contava tudo como novo.
+    const reiniciou = !!base && leitura.segundos + 5 < base.segundos;
+
+    if (reiniciou || !base) {
+      estado.huntBase = { segundos: leitura.segundos, drops: { ...leitura.drops } };
+    } else {
+      // Guarda o maior valor já visto de cada drop. Se um drop sumir da leitura,
+      // continua contando o que ficou registrado até aqui — a piscada não conta como reset.
+      const fundidos = { ...base.drops };
+      for (const [nome, d] of Object.entries(leitura.drops)) {
+        fundidos[nome] = (base.drops[nome] && base.drops[nome].qtd > d.qtd) ? base.drops[nome] : d;
+      }
+      estado.huntBase = { segundos: Math.max(base.segundos, leitura.segundos), drops: fundidos };
+    }
 
     // Primeira leitura ou hunt nova: o que já está na lista não é drop novo.
-    // Com o Hunt Analyzer fechado a base fica guardada, então drops desse intervalo avisam ao reabrir.
     if (!base || reiniciou || !estado.configs.alertaDropRaro) return;
 
     const novos = Object.entries(leitura.drops)
@@ -577,7 +676,18 @@
       }))
       .filter((d) => d.ganho > 0 && C.motivoItemNotificavel(d, estado.configs));
 
-    if (novos.length) enviarAlerta('DROP_RARO', C.formatarMensagemDrops(novos));
+    if (novos.length) {
+      enviarAlerta('DROP_RARO', C.formatarMensagemDrops(novos));
+      // Registra pro resumo: assim o item entra na lista de "itens raros do período"
+      // mesmo se o painel do Hunt Analyzer não mostrar mais o item na hora do resumo
+      novos.forEach((d) => registrarNoHistorico('dropsAlertados', {
+        t: Date.now(),
+        n: d.nome,
+        r: d.raridade || null,
+        g: d.ganho,
+        tot: d.total
+      }));
+    }
   }
 
   // -------------------------------------------------------------
@@ -686,11 +796,15 @@
         const inicio = agora - periodoMs;
         const capturas = (await lerHistorico('capturas')).filter((c) => c.t >= inicio);
         const fotos = (await lerHistorico('hunt')).filter((f) => f.t >= inicio);
+        // Drops que já dispararam alerta no período: entram no resumo mesmo se o
+        // painel do Hunt Analyzer estiver zerado ou o item já tiver sido consumido
+        const dropsAlertados = (await lerHistorico('dropsAlertados')).filter((d) => d.t >= inicio);
 
         enviarAlerta('RESUMO', C.formatarResumo({
           horas: estado.configs.resumoHoras,
           capturas,
           hunt: calcularHuntDoPeriodo(fotos, estado.huntAtual),
+          dropsAlertados,
           bolas: Object.keys(estado.estoqueBolas).length ? estado.estoqueBolas : null,
           semBolas: estado.semBolas
         }));
@@ -1730,6 +1844,137 @@
     }
   }
 
+  // ---------------------------------------------------------------
+  //  LEITOR DE POKÉMON P/ CALCULADORA PIW (opção 2)
+  //  Lê o card de hover `.inv-tip` (inventário/box/venda) e mostra um
+  //  botão flutuante que abre o piwtools.com.br já preenchido.
+  // ---------------------------------------------------------------
+  function lerCardPokemonPIW(tip) {
+    const nome = (tip.querySelector('.inv-tip-name')?.textContent || '').trim();
+    const top = tip.querySelector('.inv-tip-poke-top');
+    if (!nome || !top) return null;
+
+    let nivel = '', raridade = '', quality = '', iv = '';
+    top.querySelectorAll('span').forEach((s) => {
+      const rotulo = (s.childNodes[0]?.textContent || '').trim().toLowerCase();
+      const b = (s.querySelector('b')?.textContent || '').trim();
+      const small = (s.querySelector('small')?.textContent || '').trim();
+      if (rotulo.startsWith('nv')) nivel = b;
+      else if (rotulo.startsWith('qualidade')) {
+        raridade = b;
+        quality = small.replace(/[×x]/gi, '').trim(); // "1.80"
+      } else if (rotulo.startsWith('iv')) iv = b;
+    });
+
+    const stats = {};
+    const grid = tip.querySelector('.inv-tip-poke-grid');
+    if (grid) {
+      grid.querySelectorAll('span').forEach((s) => {
+        const rotulo = (s.childNodes[0]?.textContent || '').trim().toLowerCase();
+        const val = (s.querySelector('b')?.textContent || '').trim();
+        if (rotulo.startsWith('hp')) stats.hp = val;
+        else if (rotulo.startsWith('atk')) stats.atk = val;
+        else if (rotulo.startsWith('def')) stats.def = val;
+        else if (rotulo.startsWith('spa')) stats.spa = val;
+        else if (rotulo.startsWith('spd')) stats.spd = val;
+        else if (rotulo.startsWith('vel') || rotulo.startsWith('spe')) stats.spe = val;
+      });
+    }
+
+    const poder = (tip.querySelector('.inv-tip-poke-power b')?.textContent || '').trim();
+    if (!nivel || !iv || Object.keys(stats).length < 6) return null;
+
+    return { nome, nivel, raridade, quality, iv, stats, poder, capturadoEm: Date.now() };
+  }
+
+  function garantirBotaoPIW() {
+    let btn = document.getElementById('pw-piw-btn');
+    if (btn) return btn;
+    btn = document.createElement('button');
+    btn.id = 'pw-piw-btn';
+    btn.type = 'button';
+    btn.style.cssText = [
+      'position:fixed', 'z-index:2147483000', 'left:0', 'top:0',
+      'display:none', 'align-items:center', 'gap:6px',
+      'padding:7px 11px', 'border-radius:9px', 'cursor:pointer',
+      'font:600 11px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+      'color:#f6efdf', 'background:#14100a',
+      'border:1px solid rgba(223,186,115,.55)',
+      'box-shadow:0 6px 20px rgba(0,0,0,.55)'
+    ].join(';');
+    btn.addEventListener('click', abrirNoPIW);
+    btn.addEventListener('mouseenter', () => { btn.style.background = '#1c160d'; });
+    btn.addEventListener('mouseleave', () => { btn.style.background = '#14100a'; });
+    (document.body || document.documentElement).appendChild(btn);
+    return btn;
+  }
+
+  function mostrarBotaoPIW(dados, alvo) {
+    const btn = garantirBotaoPIW();
+    btn.innerHTML = '<span style="color:#dfba73">&#128269;</span> Analisar <b style="color:#ffd21f;font-weight:800">'
+      + dados.nome + '</b> no PIW';
+    btn.style.display = 'inline-flex';
+    // Cola o botão AO LADO do Pokémon (à direita da linha, centralizado na vertical).
+    // Se não couber à direita, joga pra esquerda da linha.
+    if (alvo && alvo.getBoundingClientRect) {
+      const r = alvo.getBoundingClientRect();
+      const bw = btn.offsetWidth || 190;
+      const bh = btn.offsetHeight || 30;
+      let left = r.right + 6;
+      if (left + bw > window.innerWidth - 6) left = r.left - bw - 6;
+      let top = r.top + (r.height - bh) / 2;
+      left = Math.max(6, Math.min(left, window.innerWidth - bw - 6));
+      top = Math.max(6, Math.min(top, window.innerHeight - bh - 6));
+      btn.style.left = left + 'px';
+      btn.style.top = top + 'px';
+    }
+  }
+
+  function abrirNoPIW() {
+    if (!estado.ultimoPokemonPIW) return;
+    // Grava os dados (o autofill do piwtools espera a página carregar antes de ler)
+    // e abre a aba de forma SÍNCRONA, no gesto do clique — senão o Chrome bloqueia
+    // o window.open como popup.
+    chrome.storage.local.set({ piwAutofill: estado.ultimoPokemonPIW });
+    window.open('https://piwtools.com.br/calculator', '_blank');
+    const btn = document.getElementById('pw-piw-btn');
+    if (btn) btn.style.display = 'none';
+  }
+
+  function iniciarLeitorPokemonPIW() {
+    let timer = 0;
+    document.addEventListener('mouseover', (e) => {
+      // Captura a LINHA do Pokémon sob o mouse (botão cola ao lado dela).
+      // Robusto: a linha é o <button> da lista que contém o nome (.dpt-name),
+      // então funciona tanto na Equipe quanto no Box.
+      let linha = null;
+      if (e.target && e.target.closest) {
+        const b = e.target.closest('button');
+        if (b && b.querySelector('.dpt-name')) linha = b;
+        else linha = e.target.closest('.dpt-poke-row, .dpt-row');
+      }
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const tip = document.querySelector('.inv-tip');
+        if (!tip) return;
+        const dados = lerCardPokemonPIW(tip);
+        if (!dados) return;
+        const assinatura = dados.nome + '|' + dados.nivel + '|' + dados.iv + '|' + JSON.stringify(dados.stats);
+        estado.ultimoPokemonPIWJson = assinatura;
+        estado.ultimoPokemonPIW = dados;
+        mostrarBotaoPIW(dados, linha || tip);
+      }, 80);
+    }, true);
+
+    // Some com o botão quando o Depósito fecha (a lista de Pokémon sai da tela).
+    setInterval(() => {
+      const btn = document.getElementById('pw-piw-btn');
+      if (btn && btn.style.display !== 'none' && !document.querySelector('.dpt-poke-row')) {
+        btn.style.display = 'none';
+      }
+    }, 500);
+  }
+
   function iniciar() {
     carregarConfiguracoes(() => {
       ouvirMudancasDeConfig();
@@ -1739,6 +1984,7 @@
       iniciarWorkerHeartbeat();
       injetarHUD();
       injetarToolModal();
+      iniciarLeitorPokemonPIW();
       cicloVerificacao();
       console.log('[Pok3Watch] Monitor passivo rodando com sucesso!');
     });

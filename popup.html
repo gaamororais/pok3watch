@@ -5,26 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title data-i18n="popup.titulo">Pok3Watch — Cockpit de Controle</title>
   <style>
+    /* Fontes empacotadas localmente (sem CDN) */
+    @font-face {
+      font-family: "Archivo Black";
+      src: url("fonts/ArchivoBlack-Regular.ttf") format("truetype");
+      font-weight: 400 900;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "JetBrains Mono";
+      src: url("fonts/JetBrainsMono-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
     :root {
-      --bg-chassis: #06090d;
-      --panel-surface: #0a0f16;
-      --panel-surface-elevated: #0f1620;
-      --panel-surface-subtle: #080d13;
-      --gold-primary: #dfba73;
-      --gold-bright: #fef08a;
-      --gold-dark: #97732a;
-      --gold-border: rgba(223, 186, 115, 0.35);
-      --gold-border-subtle: rgba(223, 186, 115, 0.16);
-      --gold-glow: rgba(223, 186, 115, 0.15);
-      --emerald: #10b981;
-      --emerald-glow: rgba(16, 185, 129, 0.25);
-      --amber: #f59e0b;
-      --rose: #f43f5e;
-      --text-high: #f8fafc;
-      --text-mid: #94a3b8;
-      --text-dim: #475569;
-      --font-mono: "SF Mono", "Cascadia Code", "Roboto Mono", ui-monospace, monospace;
+      /* Base: preto-quente tintado no latão (nunca #000) */
+      --bg-chassis: oklch(0.16 0.008 75);
+      --panel-surface: oklch(0.195 0.01 75);
+      --panel-surface-elevated: oklch(0.235 0.012 75);
+      --panel-surface-subtle: oklch(0.17 0.008 75);
+      /* Identidade: latão (herda o dourado) */
+      --gold-primary: oklch(0.79 0.088 82);
+      --gold-bright: oklch(0.9 0.1 92);
+      --gold-dark: oklch(0.56 0.08 78);
+      --gold-border: oklch(0.79 0.088 82 / 0.32);
+      --gold-border-subtle: oklch(0.79 0.088 82 / 0.15);
+      --gold-glow: oklch(0.79 0.088 82 / 0.14);
+      /* Alta-tensão: reservado ao ÚNICO número vivo (ritmo da hunt) */
+      --volt: oklch(0.87 0.19 101);
+      --volt-glow: oklch(0.87 0.19 101 / 0.28);
+      /* Estado semântico apenas (online/offline, +ganho/-perda) */
+      --emerald: oklch(0.74 0.15 162);
+      --emerald-glow: oklch(0.74 0.15 162 / 0.25);
+      --amber: oklch(0.8 0.13 75);
+      --rose: oklch(0.66 0.2 18);
+      --text-high: oklch(0.97 0.004 75);
+      --text-mid: oklch(0.72 0.014 75);
+      --text-dim: oklch(0.52 0.014 75);
       --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+      --font-display: "Archivo Black", var(--font-ui);
     }
 
     * {
@@ -103,23 +123,18 @@
       filter: drop-shadow(0 0 6px rgba(223, 186, 115, 0.4));
     }
     .header-titles h3 {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      font-family: var(--font-mono);
-      background: linear-gradient(180deg, #ffffff 0%, #dfba73 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      line-height: 1.1;
+      font-size: 17px;
+      font-family: var(--font-display);
+      letter-spacing: -0.01em;
+      color: var(--gold-primary);
+      line-height: 1;
     }
     .header-titles p {
-      font-size: 9.5px;
-      color: #94a3b8;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-family: var(--font-mono);
-      margin-top: 1px;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.01em;
+      font-family: var(--font-ui);
+      margin-top: 3px;
     }
 
     .header-version {
@@ -177,6 +192,38 @@
     .account-tab-btn.active {
       background: rgba(223, 186, 115, 0.15);
       border-color: var(--gold-primary);
+    }
+
+    /* NAVEGAÇÃO DE ABAS (NOVO) */
+    .tabs-navigation {
+      display: flex;
+      gap: 0;
+      background: #080d13;
+      border-bottom: 1px solid rgba(223, 186, 115, 0.2);
+      padding: 0;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 12px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-mid);
+      font-size: 12px;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .tab-btn:hover {
+      color: var(--text-high);
+      border-bottom-color: rgba(223, 186, 115, 0.3);
+    }
+    .tab-btn-active {
+      color: var(--gold-primary);
+      border-bottom-color: var(--gold-primary);
+      background: rgba(223, 186, 115, 0.05);
+    }
       color: var(--gold-bright);
       font-weight: 700;
       box-shadow: 0 0 8px rgba(223, 186, 115, 0.2);
@@ -1324,7 +1371,7 @@
         <circle cx="12" cy="12" r="1.6" fill="#fef08a"/>
       </svg>
       <div class="header-titles">
-        <h3>PokéWatch</h3>
+        <h3>Pok3Watch</h3>
         <p>Obsidian Cockpit</p>
       </div>
     </div>
@@ -1341,7 +1388,7 @@
     <div class="account-tabs" id="accountTabs"></div>
   </div>
 
-  <div class="content">
+  <div class="content" id="abaPrincipal">
 
     <!-- AJUDE O CRIADOR -->
     <div class="doar-card">
@@ -1787,11 +1834,12 @@
 
   </div>
 
-  <!-- TOAST -->
   <div id="toast" data-i18n="popup.toastPadrao">Configurações salvas com sucesso!</div>
 
   <script src="idiomas.js"></script>
+  <script src="hunts.js"></script>
   <script src="cerebro.js"></script>
   <script src="popup.js"></script>
+  <script src="tabs.js"></script>
 </body>
 </html>

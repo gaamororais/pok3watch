@@ -1,18 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Pok3Watch — Alertas para Poke Idle World",
-  "version": "1.46",
-  "description": "Avisa no WhatsApp quando cai shiny, Pokémon raro, item raro, acabam as Pokébolas ou o jogo desconecta.",
+  "name": "Pok3Watch — Monitor de Capturas",
+  "version": "1.53",
+  "description": "Monitor passivo de capturas, shinies, drops, Pokébolas e conexão para Poke Idle World com resumo periódico.",
   "permissions": [
     "storage",
+    "power",
+    "tabs",
     "notifications",
     "alarms",
-    "power",
     "sidePanel"
   ],
   "host_permissions": [
     "https://poke.idleworld.online/*",
-    "https://api.callmebot.com/*"
+    "https://api.callmebot.com/*",
+    "https://piwtools.com.br/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -27,8 +29,19 @@
       ],
       "js": [
         "idiomas.js",
+        "firstcatch.js",
+        "hunts.js",
         "cerebro.js",
         "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://piwtools.com.br/*"
+      ],
+      "js": [
+        "piwtools-autofill.js"
       ],
       "run_at": "document_idle"
     }
@@ -52,6 +65,5 @@
   "side_panel": {
     "default_path": "popup.html?painel=1"
   },
-  "short_name": "Pok3Watch",
   "minimum_chrome_version": "114"
 }
